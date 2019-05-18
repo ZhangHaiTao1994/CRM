@@ -1,0 +1,163 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>
+    $(function () {
+        gridList();
+    })
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "/MemberManage/Member/GetGridJson",
+            height: $(window).height() - 128,
+            colModel: [
+                { label: '主键', name: 'F_Id', hidden: true },
+                { label: '会员编码', name: 'F_MemberCode', width: 80, align: 'left' },
+                { label: '会员姓名', name: 'F_MemberName', width: 80, align: 'left' },
+                {
+                    label: '性别', name: 'F_Gender', width: 60, align: 'center',
+                    formatter: function (cellvalue, options, rowObject) {
+                        if (cellvalue == true) {
+                            return '男';
+                        } else {
+                            return '女';
+                        }
+                    }
+                },
+                { label: '微信昵称', name: 'F_WeChatName', width: 80, align: 'left' },
+                { label: '电话号码', name: 'F_TelePhoneNo', width: 80, align: 'left' },
+                { label: '消费金额', name: 'F_Amount', width: 80, align: 'left' },
+                {
+                    label: '最近采购时间', name: 'F_LastPurchaseDate', width: 80, align: 'left',
+                    formatter: "date", formatoptions: { srcformat: 'Y-m-d', newformat: 'Y-m-d' }
+                },
+                { label: '归属人', name: 'F_BelongerId', width: 80, align: 'left' },
+                { label: '归属微信号码', name: 'F_BelongerWeChatID', width: 80, align: 'left' },
+                { label: '归属微信昵称', name: 'F_BelongerWeChatName', width: 80, align: 'left' },
+                { label: '未跟进天数', name: 'F_NoFollowUpDays', width: 80, align: 'left' },
+                {
+                    label: '客户类型', name: 'F_CustomerType', width: 80, align: 'left',
+                    formatter: function (cellvalue, options, rowObject) {
+                        if (cellvalue == 'W') {
+                            return '微信好友'
+                        } else if (cellvalue == 'T') {
+                            return '电话客户'
+                        } else {
+                            return '公众号';
+                        }
+                    }
+                },
+                {
+                    label: '创建时间', name: 'F_CreatorTime', width: 80, align: 'left',
+                    formatter: "date", formatoptions: { srcformat: 'Y-m-d', newformat: 'Y-m-d' }
+                },
+                { label: '创建人', name: 'F_CreatorUserId', width: 80, align: 'left' },
+                {
+                    label: '状态', name: 'F_Status', width: 80, align: 'left',
+                    formatter: function (cellvalue, options, rowObject) {
+                        if (cellvalue == 'A') {
+                            return '有效'
+                        } else if (cellvalue == 'P') {
+                            return '无效'
+                        } else {
+                            return '删除';
+                        }
+                    }
+                },
+            ],
+            pager: "#gridPager",
+            sortname: 'F_CreatorTime desc',
+            viewrecords: true
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: { keyword: $("#txt_keyword").val() },
+            }).trigger('reloadGrid');
+        });
+    }
+    function btn_add() {
+        $.modalOpen({
+            id: "Form",
+            title: "新增会员",
+            url: "/MemberManage/Member/Form",
+            width: "700px",
+            height: "510px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].submitForm();
+            }
+        });
+    }
+    function btn_edit() {
+        var keyValue = $("#gridList").jqGridRowValue().F_Id;
+        $.modalOpen({
+            id: "Form",
+            title: "修改会员",
+            url: "/MemberManage/Member/Form?keyValue=" + keyValue,
+            width: "700px",
+            height: "510px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].submitForm();
+            }
+        });
+    }
+    function btn_delete() {
+        $.deleteForm({
+            url: "/MemberManage/Member/DeleteForm",
+            param: { keyValue: $("#gridList").jqGridRowValue().F_Id },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+    function btn_details() {
+        var keyValue = $("#gridList").jqGridRowValue().F_Id;
+        $.modalOpen({
+            id: "Details",
+            title: "查看会员",
+            url: "/SystemManage/User/Details?keyValue=" + keyValue,
+            width: "700px",
+            height: "550px",
+            btn: null,
+        });
+    }
+</script>
+
+<div class="topPanel">
+    <div class="toolbar">
+        <div class="btn-group">
+            <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span></a>
+        </div>
+        <div class="btn-group">
+            <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_add()"><i class="fa fa-plus"></i>新建会员</a>
+        </div>
+        <div class="operate">
+            <ul class="nav nav-pills">
+                <li class="first">已选中<span>1</span>项</li>
+                <li><a id="NF-edit" authorize="yes" onclick="btn_edit()"><i class="fa fa-pencil-square-o"></i>修改会员</a></li>
+                <li><a id="NF-delete" authorize="yes" onclick="btn_delete()"><i class="fa fa-trash-o"></i>删除会员</a></li>
+                <li><a id="NF-Details" authorize="yes" onclick="btn_details()"><i class="fa fa-search-plus"></i>查看会员</a></li>
+            </ul>
+            <a href="javascript:;" class="close"></a>
+        </div>
+        <script>$('.toolbar').authorizeButton()</script>
+    </div>
+    <div class="search">
+        <table>
+            <tr>
+                <td>
+                    <div class="input-group">
+                        <input id="txt_keyword" type="text" class="form-control" placeholder="编码/姓名/手机" style="width: 200px;">
+                        <span class="input-group-btn">
+                            <button id="btn_search" type="button" class="btn  btn-primary"><i class="fa fa-search"></i></button>
+                        </span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div class="gridPanel">
+    <table id="gridList"></table>
+    <div id="gridPager"></div>
+</div>
